@@ -1,4 +1,4 @@
-# Author: Naveen Kumar Gopi
+# Author: Pramati Technologies
 
 from org.xdi.service.cdi.util import CdiUtil
 from org.xdi.oxauth.security import Identity
