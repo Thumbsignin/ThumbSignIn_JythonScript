@@ -82,34 +82,38 @@ class PersonAuthentication(PersonAuthenticationType):
     @staticmethod
     def set_relying_party_login_url(identity):
         print "ThumbSignIn. Inside set_relying_party_login_url..."
-        session_id =  identity.getSessionId()
+        session_id = identity.getSessionId()
         session_attribute = session_id.getSessionAttributes()
         state_jwt_token = session_attribute.get("state")
-
+        print "ThumbSignIn. Value of state_jwt_token is %s" % state_jwt_token
         relying_party_login_url = ""
-        if state_jwt_token is not None:
-            state_jwt_token_array = String(state_jwt_token).split("\\.")
-            state_jwt_token_payload = state_jwt_token_array[1]
-            state_payload_str = String(Base64Util.base64urldecode(state_jwt_token_payload), "UTF-8")
-            state_payload_json = JSONObject(state_payload_str)
-            print "ThumbSignIn. Value of state JWT token Payload is %s" % state_payload_json
-            if state_payload_json.has("additional_claims"):
-                additional_claims = state_payload_json.get("additional_claims")
-                relying_party_id = additional_claims.get(RELYING_PARTY_ID)
-                print "ThumbSignIn. Value of relying_party_id is %s" % relying_party_id
-                identity.setWorkingParameter(RELYING_PARTY_ID, relying_party_id)
+        if (state_jwt_token is None) or ("." not in state_jwt_token):
+            print "ThumbSignIn. Value of state parameter is not in the format of JWT Token"
+            identity.setWorkingParameter(RELYING_PARTY_LOGIN_URL, relying_party_login_url)
+            return None
 
-                if String(relying_party_id).startsWith("google.com"):
-                    # google.com/a/unphishableenterprise.com
-                    relying_party_id_array = String(relying_party_id).split("/")
-                    google_domain = relying_party_id_array[2]
-                    print "ThumbSignIn. Value of google_domain is %s" % google_domain
-                    relying_party_login_url = "https://www.google.com/accounts/AccountChooser?hd="+ google_domain + "%26continue=https://apps.google.com/user/hub"
-                    # elif (String(relying_party_id).startsWith("xyz")):
-                    # relying_party_login_url = "xyz.com"
-                else:
-                    # If relying_party_login_url is empty, Gluu's default login URL will be used
-                    relying_party_login_url = ""
+        state_jwt_token_array = String(state_jwt_token).split("\\.")
+        state_jwt_token_payload = state_jwt_token_array[1]
+        state_payload_str = String(Base64Util.base64urldecode(state_jwt_token_payload), "UTF-8")
+        state_payload_json = JSONObject(state_payload_str)
+        print "ThumbSignIn. Value of state JWT token Payload is %s" % state_payload_json
+        if state_payload_json.has("additional_claims"):
+            additional_claims = state_payload_json.get("additional_claims")
+            relying_party_id = additional_claims.get(RELYING_PARTY_ID)
+            print "ThumbSignIn. Value of relying_party_id is %s" % relying_party_id
+            identity.setWorkingParameter(RELYING_PARTY_ID, relying_party_id)
+
+            if String(relying_party_id).startsWith("google.com"):
+                # google.com/a/unphishableenterprise.com
+                relying_party_id_array = String(relying_party_id).split("/")
+                google_domain = relying_party_id_array[2]
+                print "ThumbSignIn. Value of google_domain is %s" % google_domain
+                relying_party_login_url = "https://www.google.com/accounts/AccountChooser?hd="+ google_domain + "%26continue=https://apps.google.com/user/hub"
+                # elif (String(relying_party_id).startsWith("xyz")):
+                # relying_party_login_url = "xyz.com"
+            else:
+                # If relying_party_login_url is empty, Gluu's default login URL will be used
+                relying_party_login_url = ""
 
         print "ThumbSignIn. Value of relying_party_login_url is %s" % relying_party_login_url
         identity.setWorkingParameter(RELYING_PARTY_LOGIN_URL, relying_party_login_url)
